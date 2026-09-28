@@ -53,7 +53,7 @@ export function ProjectsSection() {
   const [featuredImgErrors, setFeaturedImgErrors] = useState({});
 
   useEffect(() => {
-    fetch('/data/projects.json')
+    fetch(`${import.meta.env.BASE_URL}data/projects.json`)
       .then(res => res.json())
       .then(json => setData(json))
       .catch(() => setData({ featured: [], projects: [] }));
