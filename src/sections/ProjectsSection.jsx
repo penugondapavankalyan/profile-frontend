@@ -99,7 +99,7 @@ export function ProjectsSection() {
               </div>
             </div>
             {f.image && !featuredImgErrors[f.title]
-              ? <div className="project-art project-art-image"><img src={`/images/${f.title}/${f.image}`} alt={f.title} onError={() => setFeaturedImgErrors(prev => ({ ...prev, [f.title]: true }))} /></div>
+              ? <div className="project-art project-art-image"><img src={`${import.meta.env.BASE_URL}images/${f.title}/${f.image}`} alt={f.title} onError={() => setFeaturedImgErrors(prev => ({ ...prev, [f.title]: true }))} /></div>
               : <div className="project-art" aria-hidden="true"><div className="shape" /></div>
             }
           </article>
@@ -119,7 +119,7 @@ export function ProjectsSection() {
                 {project.image && (
                   <LightboxImage
                     className="project-popup-thumb"
-                    src={`/images/${project.title}/${project.image}`}
+                    src={`${import.meta.env.BASE_URL}images/${project.title}/${project.image}`}
                     alt={project.title}
                     onError={e => { e.currentTarget.style.display = 'none'; }}
                   />
@@ -168,7 +168,7 @@ function CarouselInner({ images, projectTitle, current, setCurrent, isAuto, setI
             <LightboxImage
               key={origIdx}
               className="carousel-img"
-              src={`/images/${projectTitle}/${images[origIdx]}`}
+              src={`${import.meta.env.BASE_URL}images/${projectTitle}/${images[origIdx]}`}
               alt={`Screenshot ${i + 1}`}
               onError={() => {
                 setFailedImages(prev => ({ ...prev, [origIdx]: true }));
@@ -263,7 +263,7 @@ function ProjectPopup({ project, onClose }) {
             {project.image && (
               <LightboxImage
                 className="project-popup-thumb"
-                src={`/images/${project.title}/${project.image}`}
+                src={`${import.meta.env.BASE_URL}images/${project.title}/${project.image}`}
                 alt={project.title}
                 onError={e => { e.currentTarget.style.display='none'; }}
               />
