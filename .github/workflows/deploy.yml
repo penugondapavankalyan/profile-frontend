@@ -25,7 +25,7 @@ jobs:
       - name: Build
         env:
           # Base path: '/' for AWS (served from root), '/profile-frontend/' for GitHub Pages
-          VITE_BASE_PATH: ${{ secrets.HOST == 'github_pages' && '/profile-frontend/' || '/' }}
+          VITE_BASE_PATH: ${{ vars.HOST == 'github_pages' && '/profile-frontend/' || '/' }}
           # Sensitive — stays in secrets
           VITE_CHAT_API_BASE_URL: ${{ secrets.VITE_CHAT_API_BASE_URL }}
           # Non-sensitive config — stored as variables
@@ -47,11 +47,11 @@ jobs:
           retention-days: 1
 
   # ─── JOB 2: Deploy to AWS ────────────────────────────────────────────────────
-  # Runs only when HOST secret = 'aws'
+  # Runs only when HOST variable = 'aws'
   deploy-aws:
     needs: build
     runs-on: ubuntu-latest
-    if: ${{ secrets.HOST == 'aws' }}
+    if: ${{ vars.HOST == 'aws' }}
     steps:
       - name: Download dist artifact
         uses: actions/download-artifact@v4
@@ -91,11 +91,11 @@ jobs:
             --paths "/*"
 
   # ─── JOB 3: Deploy to GitHub Pages ───────────────────────────────────────────
-  # Runs only when HOST secret = 'github_pages'
+  # Runs only when HOST variable = 'github_pages'
   deploy-github-pages:
     needs: build
     runs-on: ubuntu-latest
-    if: ${{ secrets.HOST == 'github_pages' }}
+    if: ${{ vars.HOST == 'github_pages' }}
     permissions:
       pages: write
       id-token: write
