@@ -1,0 +1,46 @@
+{
+  "featured": [
+    {
+      "title": "Savyasaachi",
+      "shortDescription": "An AI-powered bit for kirana store owners — handles inventory, billing, invoices, customer khata, and weekly insights, all managed through natural language.",
+      "detailedDescription": "**Savyasaachi** is a bot built for kirana store owners in India.\n\nIt leverages **large language models** and **MCPs** to let shop owners manage their entire business through simple text commands via telegram chat.\n\n### Key Features\n\n- 🛒 **Inventory tracking** — Real-time stock management\n- 🧾 **Automated billing** — GST-ready invoice generation\n- 📒 **Customer khata** — credit ledger per customer\n- 📊 **Weekly insights** — Weekly Sales, inventory, Khata, customer, GST analytics PPT\n- 💬 **Telegram interface** — no app install needed\n\n### Highlights\n\n- A **production-grade AI-powered Telegram bot** for Indian kirana stores using PydanticAI and AWS Lambda (Python 3.12), enabling end-to-end billing, inventory management, GST-compliant invoicing, and khata (credit ledger) through natural language — deployed as a serverless webhook with **sub-30s response time**.\n- Designed a **multi-domain MCP architecture** with 7 domain modules (Billing, Catalogue, Inventory, Khata, Analytics, Documents, Payments) running in a single Lambda, featuring context-bound tool closures, dynamic per-turn tool selection across 6 intent groups, and a **model fallback cascade across 4 LLMs** (Qwen, LLaMA, GPT-OSS).\n- An **LLM-resilient data pipeline** with custom guardrails (hallucination stripping, UUID validation, Indian phone normalisation, GST slab enforcement), a Redis-backed multi-turn payment flow for over/under-payment resolution, and immutable audit tables in PostgreSQL with atomic stock RPCs — ensuring financial accuracy even when the model misbehaves.\n- **PDF invoice and PowerPoint analytics deck generation** from scratch using FPDF2 and python-pptx, with a themed invoice renderer, 5-slide business analytics deck, and a cross-platform local/Lambda file delivery system — all with lazy imports to minimise cold-start latency.\n- Implemented a **lightweight NLP intent router** (`detect_intent`) with 6 intent groups, and conversation-history-aware follow-up tracking via Redis — enabling accurate tool selection without a dedicated NLU model, keeping per-request cost near zero.\n\n### Tech Stack\n\n| Layer | Technology |\n|---|---|\n| Backend | Python, FastAPI, Pydantic AI |\n| Database | Postgres, Redis, Supabase |\n| AI | LLMs, MCP |\n| Interface | Telegram App |\n| Infra | AWS |",
+      "image": "Savyasaachi.png",
+      "tags": ["Pydantic AI", "AWS", "Redis", "Postgres", "Python", "MCP", "Telegram Webhook", "Supabase"],
+      "urls": [
+        { "label": "View Demo ↗", "href": "https://drive.google.com/file/d/1UbI9DJ_NDFQv25wJFhslch13f46ADTLD/view?usp=sharing" },
+        { "label": "Telegram Bot Link  ↗", "href": "https://t.me/SavyasaachiBot" },
+        { "label": "View on Github ↗", "href": "https://github.com/penugondapavankalyan/savyasaachi" }
+      ],
+      "project_images": [],
+      "image_transition_time": 2000
+    },
+    {
+      "title": "Verisift",
+      "shortDescription": "A document intelligence platform that extracts, validates, and cross-references information across large document sets.",
+      "detailedDescription": "**VeriSift** is an open-source, local-first Python library for PDF comparison that enables users to compare documents and generate detailed reports — available both as a library and through a CLI.\n\n### Why VeriSift?\n\n- 📄 **Beyond textual diffs** — unlike many existing tools that give only text differences, VeriSift provides **page-wise Textual, Visual, and Semantic differences** with matching scores.\n- 🎛️ **Configurable thresholds** — users control threshold levels per comparison type, making it adaptable to different industries and use cases.\n- 🤖 **Semantic matching** — powered by the **all-MiniLM-L6-v2** AI model for accurate similarity scoring.\n- 🖼️ **Visual comparison** — detects layout, alignment, and visual mismatches critical in banking, finance, health, and legal sectors where errors have zero tolerance.\n- 📦 **Batch processing** — compare large sets of PDFs in batches via library interaction, giving QE teams accurate diff reports and reducing manual effort.\n- ⚖️ **Hybrid scoring** — users assign weightage to text vs. visual scores based on document content type.\n\n### Tech Stack\n\n| Layer | Technology |\n|---|---|\n| Language | Python |\n| Semantic Model | all-MiniLM-L6-v2 |\n| Interface | Python Library + CLI |\n| Distribution | PyPI (open-source) |",
+      "image": "VeriSift.png",
+      "tags": ["Python", "Open-Source", "Text, Visual & Semantic Comparision", "PDF Comparision", "All-MiniLM-L6-v2"],
+      "urls": [
+        { "label": "View project ↗", "href": "https://pypi.org/project/verisift/" },
+        { "label": "Medium Blog ↗", "href": "https://medium.com/@penugondapavankalyan/verisift-precise-pdf-audits-private-by-default-0930f5da7425" },
+        { "label": "Github Project ↗", "href": "https://github.com/penugondapavankalyan/VeriSift" }
+      ],
+      "project_images": ["Verisift_1.jpg", "Verisift_2.jpg", "Verisift_3.png", "Verisift_4.jpg", "Verisift_5.jpg", "Verisift_6.jpg", "Verisift_7.jpg", "Verisift_8.jpg", "Verisift_9.jpg", "Verisift_10.jpg", "Verisift_11.jpg", "Verisift_12.jpg", "Verisift_13.jpg"],
+      "image_transition_time": 2500
+    }
+  ],
+  "projects": [
+    {
+      "title": "Job-Ezy",
+      "shortDescription": "Job-Ezy is a simple lightweight web-based recruiter platform built with Django with microservice architecture ",
+      "detailedDescription": "Job-Ezy is a simple lightweight web-based recruiter platform built with Django with microservice architecture ",
+      "image": "Job-Ezy.jpeg",
+      "tags": ["Django", "Python", "SQLite", "HTML", "CSS", "JS"],
+      "urls": [
+        { "label": "View on Github ↗", "href": "https://github.com/penugondapavankalyan/job-ezy" }
+      ],
+      "project_images": [],
+      "image_transition_time": 2000
+    }
+  ]
+}

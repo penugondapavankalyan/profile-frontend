@@ -1,0 +1,42 @@
+[
+  {
+    "startYear": 2018,
+    "endYear": 2022,
+    "isEducation": true,
+    "role": "Electrical & Electronics Engg",
+    "company": ["SASTRA UNIVERSITY"],
+    "duration": "4 years",
+    "description": "Built a focused product prototype from research through delivery.",
+    "tags": ["B.Tech", "Bachelors"]
+  },
+  {
+    "startYear": 2022,
+    "endYear": 2022,
+    "isEducation": false,
+    "role": "Application Developer Intern",
+    "company": ["IBM"],
+    "duration": "5 months",
+    "description": "Built a focused product prototype from research through delivery.",
+    "tags": ["Selenium", "Java", "HTML", "CSS"]
+  },
+  {
+    "startYear": 2025,
+    "endYear": 2027,
+    "isEducation": true,
+    "role": "Masters in Data Science & Management",
+    "company": ["IIM INDORE", "IIT INDORE"],
+    "duration": "2 years",
+    "description": "Built a focused product prototype from research through delivery.",
+    "tags": ["Masters"]
+  },
+  {
+    "startYear": 2023,
+    "endYear": 2026,
+    "isEducation": false,
+    "role": "Application Developer",
+    "company": ["IBM"],
+    "duration": "3.5 years",
+    "description": "Created resilient web experiences and reusable systems for growing products.",
+    "tags": ["Python", "Django", "Fast API", "Mongo DB", "Flask", "SQL", "Microservices", "LLMs", "RAG", "AWS", "Pandas"]
+  }
+]

@@ -1,0 +1,50 @@
+@keyframes float{50%{transform:translateY(-15px) rotate(4deg)}}@keyframes dot-wave{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-7px);opacity:1}}
+
+/* ─── Ferris-wheel scroll transition ─────────────────────────────────────────
+   Every .morph-section gets two live vars from the scroll listener:
+     --card-enter  1→0   section approaching centre from below  (1=far below, 0=centred)
+     --card-exit   0→1   section leaving centre toward the top  (0=centred, 1=gone)
+
+   Combined effect as the user scrolls:
+     • Coming in  → rises from below, scales up, fades in
+     • Leaving    → shrinks toward centre-top, fades out
+   
+   Both happen simultaneously on adjacent sections — the Ferris wheel arc.
+──────────────────────────────────────────────────────────────────────────── */
+
+.morph-section {
+  --card-enter: 0;
+  --card-exit:  0;
+
+  /* Enter: section punches in from below with distance + scale snap.
+     Exit:  shrinks and fades as it leaves the top.
+     Both are 0 while the section fills the viewport — no effect while reading. */
+  transform:
+    translateY(calc(var(--card-enter) * 140px))
+    scale(calc(
+      1
+      - var(--card-enter) * 0.10
+      - var(--card-exit)  * 0.04
+    ));
+
+  opacity: calc(
+    (1 - var(--card-enter) * 0.92)
+    *
+    (1 - var(--card-exit)  * 0.85)
+  );
+
+  /* Heavy deceleration: the section shoots up fast then snaps to rest.
+     Exit is quicker so it gets out of the way without lingering. */
+  transition:
+    transform 0.55s cubic-bezier(0.12, 0.8, 0.2, 1.0),
+    opacity   0.45s cubic-bezier(0.12, 0.8, 0.2, 1.0);
+
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .morph-section {
+    transform: none !important;
+    opacity:   1    !important;
+  }
+}
