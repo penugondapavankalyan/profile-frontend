@@ -12,6 +12,4 @@ export const env = Object.freeze({
   linkedinUrl: required('VITE_LINKEDIN_URL'),
   githubUrl: required('VITE_GITHUB_URL'),
   contactLink: required('VITE_CONTACT_LINK'),
-  featuredProjectUrl: required('VITE_FEATURED_PROJECT_URL'),
-  featuredProjectDemoUrl: required('VITE_FEATURED_PROJECT_DEMO_URL'),
 });
