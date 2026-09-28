@@ -37,8 +37,6 @@ jobs:
           VITE_LINKEDIN_URL: ${{ vars.VITE_LINKEDIN_URL }}
           VITE_GITHUB_URL: ${{ vars.VITE_GITHUB_URL }}
           VITE_CONTACT_LINK: ${{ vars.VITE_CONTACT_LINK }}
-          VITE_FEATURED_PROJECT_URL: ${{ vars.VITE_FEATURED_PROJECT_URL }}
-          VITE_FEATURED_PROJECT_DEMO_URL: ${{ vars.VITE_FEATURED_PROJECT_DEMO_URL }}
         run: npm run build
 
       - name: Upload dist artifact
