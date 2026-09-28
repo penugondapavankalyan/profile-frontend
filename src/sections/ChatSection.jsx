@@ -11,7 +11,7 @@ export function ChatSection({ messages, input, loading, error, failCount, lastMe
 
   // Fetch suggestions from public data
   useEffect(() => {
-    fetch('/data/ask_me_suggestions.json')
+    fetch(`${import.meta.env.BASE_URL}data/ask_me_suggestions.json`)
       .then(res => res.json())
       .then(data => setSuggestions(data))
       .catch(() => setSuggestions([]));
