@@ -48,14 +48,14 @@ export function ExperienceSection() {
   const yearHeight = useYearHeight();
 
   useEffect(() => {
-    fetch('/data/experiences.json')
+    fetch(`${import.meta.env.BASE_URL}data/experiences.json`)
       .then(res => res.json())
       .then(data => setExperiences(data))
       .catch(() => setExperiences([]));
   }, []);
 
   useEffect(() => {
-    fetch('/data/skills.json')
+    fetch(`${import.meta.env.BASE_URL}data/skills.json`)
       .then(res => res.json())
       .then(data => setSkills(data))
       .catch(() => setSkills([]));
