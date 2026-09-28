@@ -1,0 +1,1 @@
+html[data-theme='light'] body{background:radial-gradient(circle at 80% 0,#d8d7f066,transparent 32rem),var(--bg)}html[data-theme='light'] .button.primary,html[data-theme='light'] .send,html[data-theme='light'] .chat-widget{color:#fff;background:#174ea6}html[data-theme='light'] .theme-toggle{color:#174ea6;border-color:#174ea6}
