@@ -11,6 +11,7 @@ jobs:
   # Always runs. Injects all VITE_ config, runs npm build, uploads dist/ as artifact.
   build:
     runs-on: ubuntu-latest
+    environment: PROD
     steps:
       - uses: actions/checkout@v4
 
