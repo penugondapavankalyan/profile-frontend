@@ -19,7 +19,7 @@ export function ProfileInformationSection() {
   return <section id="profile-information" className="section morph-section"><div className="container">
     {/* <SectionHeading index="02 / Profile information" title="Curiosity with a practical edge." intro="A compact introduction with useful context about the person behind the work." /> */}
     <SectionHeading index="02 / Profile information" title="Curiosity with a practical edge."  />
-    <div className="two-column"><article className="panel"><p>I combine engineering, design, and curiosity to build meaningful digital products. My work turns complex ideas into experiences that feel simple, fast, and human.</p><p className="muted">Based in London · Working globally</p></article><article className="panel"><p className="eyebrow">Currently exploring</p><p className="feature-copy">Knowledge experiences, intelligent interfaces, and systems that make information easier to use.</p></article></div>
+    <div className="two-column"><article className="panel"><p>I combine engineering, design, and curiosity to build meaningful digital products. My work turns complex ideas into experiences that feel simple, fast, and human.</p><p className="muted"></p></article><article className="panel"><p className="eyebrow">Currently exploring</p><p className="feature-copy">Knowledge experiences, intelligent interfaces, and systems that make information easier to use.</p></article></div>
     <div className="capabilities">{capabilities.map(([title, description], index) => <article className="capability" key={title}><span className="eyebrow">0{index + 1}</span><strong>{title}</strong><span className="muted">{description}</span></article>)}</div>
   </div></section>;
 }
