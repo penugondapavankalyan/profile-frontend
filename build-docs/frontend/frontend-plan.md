@@ -34,22 +34,57 @@ The committed [`.env.example`](../frontend/.env.example) documents required fron
 Public frontend variables (all defined and read through [`src/config/env.js`](../../frontend/src/config/env.js)):
 
 ```text
+VITE_ENABLE_CHAT=true
 VITE_CHAT_API_BASE_URL=https://api.example.invalid
 VITE_CHAT_API_PATH=/chat
-VITE_APP_ENV=development
-VITE_ENABLE_CHAT=true
+# Optional — unset (= false) for the local runner and production.
+# VITE_LAMBDA_INVOKE=true
 VITE_PROFILE_NAME=Your Name
 VITE_PROFILE_EMAIL=you@example.com
-VITE_LINKEDIN_URL=https://linkedin.com/in/yourprofile
-VITE_GITHUB_URL=https://github.com/yourusername
-VITE_CONTACT_LINK=https://example.com/contact
-VITE_FEATURED_PROJECT_URL=https://example.com/project
-VITE_FEATURED_PROJECT_DEMO_URL=https://example.com/demo
+VITE_CONTACT_LINK=
+VITE_LINKEDIN_URL=
+VITE_GITHUB_URL=
 ```
+
+| Variable | Read by | Purpose |
+|---|---|---|
+| `VITE_ENABLE_CHAT` | `env.chatEnabled` | `true` always calls the backend; anything else makes no request and shows a "backend not connected" notice. |
+| `VITE_CHAT_API_BASE_URL` | `env.apiBaseUrl` | Backend base URL, or `/lambda` to go through the dev proxy. |
+| `VITE_CHAT_API_PATH` | `env.apiPath` | `/chat` for the local runner / HTTP API; `/2015-03-31/functions/function/invocations` for the Lambda container (RIE). |
+| `VITE_LAMBDA_INVOKE` | `env.lambdaInvoke` | Optional. `=== 'true'` enables the Lambda envelope (see below). Unset or any other value is `false`. Production needs no value. |
+| `VITE_PROFILE_NAME` | `env.profileName`, `index.html` | Header brand, page title, footer, contact button label. |
+| `VITE_PROFILE_EMAIL` | `env.profileEmail` | `mailto:` link in the contact section. |
+| `VITE_CONTACT_LINK` / `VITE_LINKEDIN_URL` / `VITE_GITHUB_URL` | `env.contactLink` / `linkedinUrl` / `githubUrl` | Contact buttons; each button is hidden when its value is empty. |
+
+Two further variables are read **outside** the browser bundle, by [`vite.config.js`](../../frontend/vite.config.js):
+
+| Variable | Purpose |
+|---|---|
+| `CHAT_PROXY_TARGET` | Dev only. Backend URL (e.g. `http://localhost:9002` for the local runner, or the container's mapped port) that the Vite dev server proxies `/lambda` to. It is not a `VITE_` variable, so it is never bundled. |
+| `VITE_BASE_PATH` | Build-time `base` for the static bundle; defaults to `/`. |
+
+Removed during implementation: `VITE_APP_ENV` (nothing consumed it), `VITE_FEATURED_PROJECT_URL` and `VITE_FEATURED_PROJECT_DEMO_URL` (project links now come from `public/data/projects.json`), `VITE_SKILLS` (skills come from `public/data/skills.json`), and the earlier name `VITE_CHAT_LAMBDA_INVOKE` (now `VITE_LAMBDA_INVOKE`).
+
+### Request/response wrapping (`VITE_LAMBDA_INVOKE`)
+
+The frontend supports two backend modes selected by `VITE_LAMBDA_INVOKE`:
+
+| | `false` / unset (default) | `true` |
+|---|---|---|
+| Use for | Local FastAPI runner (`/chat`), production HTTP API | Local Lambda container (RIE) |
+| `VITE_CHAT_API_PATH` | `/chat` | `/2015-03-31/functions/function/invocations` |
+| Request body | Plain JSON payload | Wrapped: `{ "body": "<stringified JSON payload>" }` |
+| JSON response | Read directly (`data.answer`) | Unwrapped from `{ statusCode, body }`: must be `statusCode === 200`, then `body` is `JSON.parse`d |
+
+Both the wrap and the unwrap are in [`src/services/chatbotApi.js`](../../frontend/src/services/chatbotApi.js), driven only by `env.lambdaInvoke`. Sending the wrapped body to `/chat` causes `400 VALIDATION_ERROR: message is required`, and sending a plain body to the RIE endpoint fails, so the flag and the path must be changed together.
+
+**Streaming limitation:** the RIE `/invocations` endpoint returns one JSON document, not an SSE stream, and the SSE-reading branch does not unwrap. With `VITE_LAMBDA_INVOKE=true`, turn "Live typing" OFF so the request is sent with `stream: false`; with it ON the call succeeds but no answer is shown.
+
+In local development `VITE_CHAT_API_BASE_URL=/lambda` goes through the Vite proxy (`CHAT_PROXY_TARGET`), which strips the `/lambda` prefix. In production the invoke URL of the HTTP API has **no stage segment**: `https://{id}.execute-api.{region}.amazonaws.com/chat` (not `.../prod/chat`).
 
 These variables are configuration, not secrets. API keys, provider credentials, AWS credentials, Google Drive credentials, and signing secrets must remain in the backend secret manager and must never be placed in the frontend environment files.
 
-Load environment values once through [`src/config/env.js`](../../frontend/src/config/env.js). Components and API services import the resolved `env` object rather than reading `import.meta.env` directly throughout the codebase. Validate required values at startup and fail with a developer-facing configuration error without exposing secrets.
+Load environment values once through [`src/config/env.js`](../../frontend/src/config/env.js). Components and API services import the resolved `env` object rather than reading `import.meta.env` directly throughout the codebase (the only exceptions are `import.meta.env.BASE_URL` for fetching `public/` assets). `env.js` currently returns an empty string for any unset value and does **not** validate required values at startup; adding a developer-facing configuration check is an open item.
 
 During deployment, inject frontend configuration through the selected AWS hosting/build environment rather than committing production values. Backend deployment configuration is managed independently through the backend hosting environment or an approved secret manager. Add `.env`, `.env.*` with the exception of `.env.example`, and generated build output to `.gitignore`. Keep `.bobignore` aligned with the sensitive-file policy.
 
@@ -59,7 +94,8 @@ During deployment, inject frontend configuration through the selected AWS hostin
 - Vite as the build tool.
 - Plain CSS organized into tokens, global rules, theme rules, and motion rules.
 - Browser APIs such as `IntersectionObserver`, `AbortController`, `crypto.randomUUID`, and `matchMedia` where appropriate.
-- `marked` for rendering Markdown content in project descriptions.
+- `marked` for rendering Markdown content in project descriptions and assistant chat replies.
+- `dompurify` for sanitizing the HTML generated from assistant (LLM) Markdown before it is injected.
 - No heavy animation or 3D dependency.
 
 The implementation uses the latest project-approved stable versions when dependencies are selected.
@@ -71,7 +107,7 @@ The implemented file tree differs from the original plan in several places docum
 ```text
 frontend/
 ├── .env                         (local only — gitignored)
-├── .env.example                 (TODO: not yet created — see open items)
+├── .env.example                 (documents required variable names)
 ├── public/
 │   ├── data/
 │   │   ├── projects.json        (project data loaded at runtime)
@@ -88,6 +124,7 @@ frontend/
 │   ├── components/
 │   │   ├── ChatWidget.jsx       (floating chat scroll-to button)
 │   │   ├── LoadingIndicator.jsx (animated three-dot loading indicator)
+│   │   ├── MarkdownMessage.jsx  (renders assistant replies: marked → table wrap → DOMPurify)
 │   │   └── SectionHeading.jsx   (shared heading component — currently unused; headings are
 │   │                             duplicated locally in each section file)
 │   ├── sections/
@@ -105,7 +142,7 @@ frontend/
 │   ├── config/
 │   │   └── env.js               (single env resolution module)
 │   ├── services/
-│   │   └── chatbotApi.js        (chat API adapter with dev mock fallback)
+│   │   └── chatbotApi.js        (chat API adapter: JSON + SSE, optional Lambda envelope)
 │   ├── styles/
 │   │   ├── tokens.css           (CSS custom properties for both themes)
 │   │   ├── global.css           (layout, components, and all section styles)
@@ -114,7 +151,8 @@ frontend/
 │   └── main.jsx
 ├── index.html
 ├── package.json
-├── vite.config.js
+├── vite.config.js               (React plugin, VITE_BASE_PATH, dev-only /lambda proxy)
+├── eslint.config.js
 └── README.md
 ```
 
@@ -127,7 +165,7 @@ frontend/
 | `ChatPanel.jsx` as a separate component | Panel logic merged directly into `ChatSection.jsx` |
 | `routes.js` | Not created — single-page app has no client-side routing |
 | `public/favicon.svg` | Not yet present |
-| `.env.example` in frontend root | Not yet created |
+| `.env.example` in frontend root | Created |
 | `SectionHeading` as shared component imported by sections | `SectionHeading` duplicated locally in `ProfileSections.jsx`, `ProjectsSection.jsx`, and `ExperienceSection.jsx`; the standalone `components/SectionHeading.jsx` exists but is not imported anywhere |
 | Static suggested questions | Loaded dynamically from `/data/ask_me_suggestions.json` |
 | Single set of `useTheme`, `useActiveSection`, `useScrollTransition` hooks | Implemented as described; `useYearHeight` is an additional inline hook inside `ExperienceSection.jsx` |
@@ -247,36 +285,79 @@ Implemented in [`src/sections/ChatSection.jsx`](../../frontend/src/sections/Chat
 - Animated three-dot loading indicator via [`LoadingIndicator`](../../frontend/src/components/LoadingIndicator.jsx).
 - Error state with warning icon and user-facing message.
 - Escalating error messages: first two failures show a retry prompt; three or more consecutive failures show a persistent message without a retry button.
-- Disabled input and send button while loading.
+- Disabled input and send button while loading or streaming.
+- "Live typing" toggle (blue switch with an ⓘ tooltip) above the input. Default ON; component state only (`streamEnabled` in `App.jsx`). Changing it mid-conversation applies to the next message; the conversation is not reset.
+- Streaming UX: the three-dot `LoadingIndicator` shows until the first token arrives, then it is replaced by an assistant bubble that grows in place as tokens arrive. With the toggle OFF the dots show until the full JSON answer arrives and the answer renders at once.
+- Assistant replies are rendered as Markdown through [`MarkdownMessage`](../../frontend/src/components/MarkdownMessage.jsx): `marked` (GFM, line breaks) → tables wrapped in `<div class="table-wrap">` → `DOMPurify.sanitize`. LLM output is treated as untrusted. User messages are plain text.
+- Wide Markdown tables scroll horizontally inside the bubble (`.message .markdown .table-wrap { overflow-x: auto }`, `table { width: max-content; min-width: 100% }`); long words and URLs wrap via `overflow-wrap: anywhere`.
+- Chat state survives a page refresh: messages (`chat.messages`) and the `conversation_id` (`chat.conversationId`) are kept in `sessionStorage` and cleared when the tab closes.
 - Enlarge/restore toggle for the chat box.
 - Auto-scroll to latest message on every state change.
 - Focus returns to the input after each response (but not on initial page load).
 
 **Chat API adapter** is in [`src/services/chatbotApi.js`](../../frontend/src/services/chatbotApi.js):
 
-- In `development` environment with no API URL configured, returns a local mock response.
-- Applies a 15-second timeout via a secondary `AbortController`.
+- When `VITE_ENABLE_CHAT=false`, makes no network request and returns `{ disabled: true }`; `App.jsx` then adds a `role: 'notice'` message rendered by `ChatSection` as a styled `.chat-notice` ("backend not connected") instead of a chat bubble.
+- When `VITE_ENABLE_CHAT=true`, always calls the backend. There is no mock fallback: connection refused, non-2xx, invalid shape, `[ERROR]` and timeout all surface as the red error with Retry (persistent message after 3 failures).
+- Applies a timeout via a secondary `AbortController`: 3 minutes when `stream: true`, 2 minutes when `stream: false`.
+- Always sends `stream` explicitly in the request body.
+- Wraps the request body in the Lambda envelope only when `env.lambdaInvoke` is `true`, and unwraps `{ statusCode, body }` on the JSON response path only in that case (see Environment configuration).
 - Combines caller and timeout signals with `AbortSignal.any`.
 - Validates that the response body contains a `string` field named `answer`.
-- Re-throws non-abort errors in non-development environments.
+- Re-throws all non-abort errors to the caller.
 
-**Request payload sent to backend:**
+**Request payload sent to backend** (the payload itself; with `VITE_LAMBDA_INVOKE` unset/false this is the entire request body):
 
 ```json
 {
   "message": "What kind of work do you do?",
-  "conversationId": "client-held UUID per page session",
-  "requestId": "per-request UUID"
+  "request_id": "per-request UUID",
+  "conversation_id": "optional, client-held UUID per tab session",
+  "stream": true
 }
 ```
 
-**Expected response from backend:**
+**Request body when `VITE_LAMBDA_INVOKE=true`** (Lambda container / RIE): the payload above is stringified and placed in `body`:
+
+```json
+{ "body": "{\"message\":\"What kind of work do you do?\",\"request_id\":\"…\",\"stream\":false}" }
+```
+
+**Expected response when `stream: false` and `VITE_LAMBDA_INVOKE` is unset/false** (`Content-Type: application/json`, no wrapper, no `statusCode`, no stringified body):
 
 ```json
 {
-  "answer": "Response text"
+  "answer": "Response text",
+  "conversation_id": "uuid",
+  "request_id": "uuid",
+  "sources": []
 }
 ```
+
+**Expected response when `stream: false` and `VITE_LAMBDA_INVOKE=true`** (Lambda container / RIE): a Lambda response whose `body` is a JSON string with the same shape as above:
+
+```json
+{ "statusCode": 200, "headers": {}, "body": "{\"answer\":\"…\",\"conversation_id\":\"uuid\",\"request_id\":\"uuid\",\"sources\":[]}" }
+```
+
+A `statusCode` other than `200` is treated as `Chat request failed`.
+
+**Expected response when `stream: true`** (`Content-Type: text/event-stream`; not available through the RIE endpoint):
+
+```text
+data: <token>
+
+data: <token>
+
+data: [DONE]
+
+```
+
+- Each token arrives as `data: <token>\n\n`; the frontend appends it to the current assistant bubble.
+- Tokens may also be JSON-wrapped as `data: {"token": "..."}`; JSON is parsed only when the payload starts with `{`, otherwise it is appended as plain text.
+- `data: [DONE]` ends the stream (the read loop exits completely and the reader is cancelled).
+- `data: [ERROR]` signals a backend failure; the frontend throws `Chat request failed` and removes the partial bubble.
+- `conversation_id` is **not** sent in the stream. The frontend keeps using the one it already holds (or none, on the first message).
 
 **Chat widget** ([`src/components/ChatWidget.jsx`](../../frontend/src/components/ChatWidget.jsx)):
 
@@ -380,27 +461,9 @@ opacity: calc(
 
 ## Chat API boundary
 
-**Request (frontend → backend):**
+`POST {VITE_CHAT_API_BASE_URL}{VITE_CHAT_API_PATH}`. The default contract (`/chat`, `VITE_LAMBDA_INVOKE` unset) is the plain-JSON request and the JSON / SSE responses described in the Chat section above. For the Lambda container, set `VITE_CHAT_API_PATH=/2015-03-31/functions/function/invocations` and `VITE_LAMBDA_INVOKE=true` to send the enveloped request and unwrap the `{ statusCode, body }` response (JSON only). The HTTP API invoke URL has no stage segment.
 
-```json
-{
-  "message": "What kind of work do you do?",
-  "conversationId": "optional-client-conversation-id",
-  "requestId": "client-generated-request-id"
-}
-```
-
-**Response (backend → frontend):**
-
-```json
-{
-  "answer": "Response text",
-  "requestId": "server-correlated-request-id",
-  "sources": []
-}
-```
-
-The frontend validates only that `data.answer` is a string. The `requestId` and `sources` fields in the response are accepted but not currently consumed by the UI. The frontend handles timeout (15 s), network failure, non-2xx responses, invalid response shape, and user-initiated abort without exposing internal details.
+For `stream: false` the frontend validates only that `data.answer` is a string (after unwrapping, when `VITE_LAMBDA_INVOKE=true`). `conversation_id` from the response is stored in `sessionStorage`. `request_id` and `sources` are accepted but not consumed by the UI. The frontend handles timeout (3 min stream / 2 min non-stream), network failure, non-2xx responses, invalid response shape, `[ERROR]` stream events, and user-initiated abort without exposing internal details.
 
 ## Accessibility requirements
 
@@ -444,9 +507,9 @@ Project images are served from `public/images/<ProjectTitle>/`. The `image` fiel
 - [x] Add the approved package manifest and lock file.
 - [x] Add the application entry point and root component.
 - [x] Add lint, formatting, and build scripts.
-- [ ] Add `.env.example` to document required variable names.
+- [x] Add `.env.example` to document required variable names.
 
-**Status:** `[x] complete` (`.env.example` outstanding — see open items)
+**Status:** `[x] complete`
 
 ---
 
@@ -511,7 +574,7 @@ Project images are served from `public/images/<ProjectTitle>/`. The `image` fiel
 
 **Intent:** Make the chatbot experience usable before backend implementation is complete.
 
-**Expected outcomes:** Users can select suggestions, submit messages, see loading feedback, receive a mocked response during development, and see errors accessibly.
+**Expected outcomes:** Users can select suggestions, submit messages, see loading feedback, receive streamed or full Markdown-formatted answers from the backend, and see errors accessibly.
 
 **Todo list:**
 
@@ -519,9 +582,12 @@ Project images are served from `public/images/<ProjectTitle>/`. The `image` fiel
 - [x] Build the chat panel and controlled input inside `ChatSection`.
 - [x] Load suggested-question buttons from `/data/ask_me_suggestions.json`; remove each after use.
 - [x] Add the accessible three-dot `LoadingIndicator`.
-- [x] Add request cancellation and 15 s timeout handling in `chatbotApi.js`.
+- [x] Add request cancellation and timeout handling (3 min stream / 2 min non-stream) in `chatbotApi.js`.
 - [x] Add escalating error messages and retry logic (retry shown for first 2 failures; persistent message shown on 3+).
-- [x] Add development mock mode (`VITE_APP_ENV=development` + no API URL).
+- [x] Add `VITE_ENABLE_CHAT` switch: `false` shows a styled "backend not connected" notice; `true` always calls the backend.
+- [x] Add optional `VITE_LAMBDA_INVOKE` (default false) for request wrapping / response unwrapping against the Lambda container.
+- [x] Render assistant replies as sanitized Markdown with horizontally scrolling tables.
+- [x] Persist chat messages and `conversation_id` in `sessionStorage`.
 
 **Status:** `[x] complete`
 
@@ -553,7 +619,10 @@ The following items were planned but have not yet been implemented:
 
 | Item | Priority | Notes |
 |---|---|---|
-| `frontend/.env.example` | High | Documents required variable names for new developers and deployment. Needed before any new environment setup. |
+| `frontend/.env.example` | Resolved | Created; documents all variables the code reads, including the optional `VITE_LAMBDA_INVOKE` and dev-only `CHAT_PROXY_TARGET`. |
+| Streaming with `VITE_LAMBDA_INVOKE=true` | Medium | The SSE branch does not unwrap and the RIE endpoint cannot stream, so "Live typing" must be OFF in container mode. Consider forcing `stream: false` when `env.lambdaInvoke` is true. |
+| Startup config validation | Low | `env.js` does not validate required variables; unset values silently become `''`. |
+| Sanitize project Markdown | Low | `ProjectsSection.jsx` renders `marked.parse(detailedDescription)` without DOMPurify. The source is the first-party `projects.json`, but sanitizing would match the chat renderer. |
 | `public/favicon.svg` | Medium | Currently no favicon is served. The `index.html` does not reference one. |
 | Contrast audit (both themes) | Medium | Foreground/background combinations should be tested against WCAG 2.2 AA (4.5:1 body, 3:1 large text) before release. |
 | Deduplicate `SectionHeading` | Low | The component is defined three times locally. The shared `components/SectionHeading.jsx` exists but is not imported anywhere. Consolidate or remove the standalone file. |
