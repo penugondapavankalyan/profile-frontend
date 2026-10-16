@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 
@@ -7,10 +8,7 @@ export default [
   js.configs.recommended,
   {
     languageOptions: {
-      globals: {
-        window: 'readonly', document: 'readonly', localStorage: 'readonly',
-        IntersectionObserver: 'readonly', AbortController: 'readonly', AbortSignal: 'readonly', fetch: 'readonly', crypto: 'readonly'
-      },
+      globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } }
     },
     files: ['**/*.{js,jsx}'],
@@ -19,5 +17,10 @@ export default [
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': 'warn'
     }
+  },
+  {
+    // Config files run in Node, not the browser.
+    files: ['vite.config.js', 'eslint.config.js'],
+    languageOptions: { globals: globals.node }
   }
 ];

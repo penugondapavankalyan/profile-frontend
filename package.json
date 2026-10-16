@@ -12,10 +12,12 @@
   "dependencies": {
     "@eslint/js": "latest",
     "@vitejs/plugin-react": "latest",
+    "dompurify": "^3.4.16",
     "eslint": "latest",
     "eslint-plugin-react-hooks": "latest",
     "eslint-plugin-react-refresh": "latest",
-    "marked": "^18.0.13",
+    "globals": "^17.13.0",
+    "marked": "^18.1.0",
     "react": "latest",
     "react-dom": "latest",
     "vite": "latest"

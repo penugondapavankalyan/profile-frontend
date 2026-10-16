@@ -5,7 +5,7 @@ const required = name => raw[name] ?? '';
 export const env = Object.freeze({
   apiBaseUrl: required('VITE_CHAT_API_BASE_URL'),
   apiPath: required('VITE_CHAT_API_PATH'),
-  appEnvironment: required('VITE_APP_ENV'),
+  lambdaInvoke: import.meta.env.VITE_LAMBDA_INVOKE === 'true',
   chatEnabled: required('VITE_ENABLE_CHAT') === 'true',
   profileName: required('VITE_PROFILE_NAME'),
   profileEmail: required('VITE_PROFILE_EMAIL'),
