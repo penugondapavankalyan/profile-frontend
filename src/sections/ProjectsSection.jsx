@@ -144,7 +144,7 @@ export function ProjectsSection() {
   );
 }
 
-function CarouselInner({ images, projectTitle, current, setCurrent, isAuto, setIsAuto, timerRef, failedImages, setFailedImages, large }) {
+function CarouselInner({ images, projectTitle, current, setCurrent, setIsAuto, timerRef, failedImages, setFailedImages, large }) {
   const originalIndices = images
     .map((_, i) => i)
     .filter(i => !failedImages[i]);
@@ -205,8 +205,6 @@ function ImageCarousel({ images, transitionTime, projectTitle }) {
   const originalIndices = images.map((_, i) => i).filter(i => !failedImages[i]);
   const count = originalIndices.length;
 
-  useEffect(() => { setCurrent(0); setIsAuto(true); }, [images]);
-
   useEffect(() => {
     if (!isAuto || count <= 1) return;
     timerRef.current = setInterval(() => {
@@ -225,7 +223,7 @@ function ImageCarousel({ images, transitionTime, projectTitle }) {
 
   if (count === 0) return null;
 
-  const sharedProps = { images, projectTitle, current, setCurrent, isAuto, setIsAuto, timerRef, failedImages, setFailedImages };
+  const sharedProps = { images, projectTitle, current, setCurrent, setIsAuto, timerRef, failedImages, setFailedImages };
 
   return (
     <>
@@ -285,7 +283,8 @@ function ProjectPopup({ project, onClose }) {
           )}
 
           {images.length > 0 && (
-            <ImageCarousel images={images} transitionTime={transitionTime} projectTitle={project.title} />
+            // key remounts the carousel per project, resetting its slide/auto-play state
+            <ImageCarousel key={project.title} images={images} transitionTime={transitionTime} projectTitle={project.title} />
           )}
         </div>
         </div>

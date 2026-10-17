@@ -16,6 +16,24 @@ const sections = [
   ['chat', 'Chat'], ['experience', 'Experience'], ['contact', 'Contact']
 ];
 
+const CHAT_ID_KEY = 'chat.conversationId';
+const CHAT_MESSAGES_KEY = 'chat.messages';
+const BACKEND_DISABLED_NOTICE = "Thank you for your question! The assistant isn't connected to a backend right now, so I can't answer it yet.";
+
+// sessionStorage keeps the chat across refreshes but is cleared when the tab closes.
+function readSession(key, fallback) {
+  try {
+    const value = window.sessionStorage.getItem(key);
+    return value ? JSON.parse(value) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeSession(key, value) {
+  try { window.sessionStorage.setItem(key, JSON.stringify(value)); } catch { /* storage blocked or full */ }
+}
+
 function SiteHeader({ activeSection, theme, toggleTheme }) {
   const [collapsed, setCollapsed] = useState(false);
   return (
@@ -55,16 +73,23 @@ function App() {
   const { theme, toggleTheme } = useTheme();
   useScrollTransition();
   useEffect(() => { document.title = env.profileName; }, []);
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => {
+    const stored = readSession(CHAT_MESSAGES_KEY, []);
+    return Array.isArray(stored) ? stored : [];
+  });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [streaming, setStreaming] = useState(false); // true while SSE chunks are arriving
+  const [streamEnabled, setStreamEnabled] = useState(true); // user toggle: default ON
   const [error, setError] = useState('');
   const [lastMessage, setLastMessage] = useState('');
   const [failCount, setFailCount] = useState(0);
-  const conversationId = useRef(crypto.randomUUID());
+  const conversationId = useRef(readSession(CHAT_ID_KEY, null));
   const requestController = useRef(null);
 
   useEffect(() => () => requestController.current?.abort(), []);
+  useEffect(() => { writeSession(CHAT_MESSAGES_KEY, messages); }, [messages]);
+
   async function submitMessage(event, candidate = input) {
     event?.preventDefault();
     const message = candidate.trim();
@@ -72,12 +97,81 @@ function App() {
     setInput(''); setError(''); setLoading(true); setLastMessage(message);
     setMessages(current => [...current, { role: 'user', text: message }]);
     requestController.current = new AbortController();
+
     try {
-      const answer = await sendChatMessage(message, { signal: requestController.current.signal, conversationId: conversationId.current });
-      setMessages(current => [...current, { role: 'assistant', text: answer }]);
-      setFailCount(0);
+      if (streamEnabled) {
+        // Keep loading dots visible until the first token arrives, then
+        // swap them out for the assistant bubble and stream into it.
+        let firstChunk = true;
+
+        const { answer, conversationId: id, disabled } = await sendChatMessage(message, {
+          signal: requestController.current.signal,
+          conversationId: conversationId.current,
+          stream: true,
+          onChunk: (accumulated) => {
+            if (firstChunk) {
+              firstChunk = false;
+              // First token: hide loading dots, create the bubble, start streaming
+              setLoading(false);
+              setStreaming(true);
+              setMessages(current => [...current, { role: 'assistant', text: accumulated, streaming: true }]);
+            } else {
+              // Subsequent tokens: update text in-place
+              setMessages(current => {
+                const copy = [...current];
+                const last = copy[copy.length - 1];
+                if (last?.role === 'assistant' && last?.streaming) {
+                  copy[copy.length - 1] = { ...last, text: accumulated };
+                }
+                return copy;
+              });
+            }
+          },
+        });
+
+        if (disabled) {
+          setMessages(current => [...current, { role: 'notice', text: BACKEND_DISABLED_NOTICE }]);
+          return;
+        }
+
+        // Finalise: strip the streaming flag
+        setMessages(current => {
+          const copy = [...current];
+          const last = copy[copy.length - 1];
+          if (last?.role === 'assistant') copy[copy.length - 1] = { role: 'assistant', text: answer };
+          return copy;
+        });
+
+        if (id && id !== conversationId.current) {
+          conversationId.current = id;
+          writeSession(CHAT_ID_KEY, id);
+        }
+        setFailCount(0);
+      } else {
+        // Non-streaming: existing behaviour
+        const { answer, conversationId: id, disabled } = await sendChatMessage(message, {
+          signal: requestController.current.signal,
+          conversationId: conversationId.current,
+          stream: false,
+        });
+        if (disabled) {
+          setMessages(current => [...current, { role: 'notice', text: BACKEND_DISABLED_NOTICE }]);
+          return;
+        }
+        if (id && id !== conversationId.current) {
+          conversationId.current = id;
+          writeSession(CHAT_ID_KEY, id);
+        }
+        setMessages(current => [...current, { role: 'assistant', text: answer }]);
+        setFailCount(0);
+      }
     } catch (requestError) {
       if (requestError.name !== 'AbortError') {
+        // Remove the empty streaming bubble if one was added
+        setMessages(current => {
+          const last = current[current.length - 1];
+          return last?.role === 'assistant' && last?.streaming ? current.slice(0, -1) : current;
+        });
         setFailCount(n => {
           const next = n + 1;
           setError(next >= 3
@@ -89,6 +183,7 @@ function App() {
     } finally {
       requestController.current = null;
       setLoading(false);
+      setStreaming(false);
     }
   }
 
@@ -98,7 +193,7 @@ function App() {
       <ProfileSection />
       <ProfileInformationSection />
       <ProjectsSection />
-      <ChatSection messages={messages} input={input} loading={loading} error={error} failCount={failCount} lastMessage={lastMessage} onInputChange={event => setInput(event.target.value)} onSubmit={submitMessage} onRetry={message => submitMessage(undefined, message)} />
+      <ChatSection messages={messages} input={input} loading={loading} streaming={streaming} streamEnabled={streamEnabled} onStreamToggle={() => setStreamEnabled(v => !v)} error={error} failCount={failCount} lastMessage={lastMessage} onInputChange={event => setInput(event.target.value)} onSubmit={submitMessage} onRetry={message => submitMessage(undefined, message)} />
       <ExperienceSection />
       <ContactSection />
     </main><ChatWidget/><a className="back-to-top-btn button" href="#profile">↑</a><footer className="container footer"><span>© 2026 {env.profileName}</span><span>Built with curiosity</span></footer>

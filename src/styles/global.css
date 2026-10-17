@@ -216,3 +216,36 @@
 .back-to-top-btn{position:fixed;right:24px;bottom:104px;z-index:11;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;padding:0;transition:transform .2s,border-color .2s}
 .back-to-top-btn:hover{transform:translateY(-3px);border-color:var(--cyan)}
 @media(max-width:760px){.back-to-top-btn{right:16px;bottom:96px;width:56px;height:56px;font-size:18px}}
+
+.message .markdown>:first-child{margin-top:0}.message .markdown>:last-child{margin-bottom:0}.message .markdown p{margin:0 0 8px}.message .markdown ul,.message .markdown ol{margin:0 0 8px;padding-left:20px}.message .markdown li{margin-bottom:4px}.message .markdown a{color:var(--blue);text-decoration:underline}.message .markdown code{padding:1px 5px;border-radius:5px;background:var(--panel);font-size:13px}.message .markdown pre{overflow-x:auto;padding:8px;border-radius:8px;background:var(--panel)}.message .markdown pre code{padding:0;background:none}
+.message .markdown{overflow-wrap:anywhere}
+.message .markdown .table-wrap{overflow-x:auto;max-width:100%;margin:8px 0}
+.message .markdown table{border-collapse:collapse;font-size:13px;width:max-content;min-width:100%}
+.message .markdown th,.message .markdown td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.message .markdown th{color:var(--text);font-weight:600;white-space:nowrap}
+.message .markdown td{min-width:80px}
+
+
+
+/* ── Chat toolbar (stream toggle row) ────────────────────────────────────── */
+.chat-toolbar{display:flex;align-items:center;justify-content:flex-end;padding:6px 2px 2px;gap:8px}
+.stream-toggle-wrap{display:flex;align-items:center;gap:6px;user-select:none}
+.stream-toggle-label{font-size:12px;color:var(--muted);white-space:nowrap}
+
+/* ── Info icon ────────────────────────────────────────────────────────────── */
+.info-icon-wrap{position:relative;display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;color:var(--muted);cursor:pointer;transition:color .2s;outline-offset:2px}
+.info-icon-wrap:hover,.info-icon-wrap:focus-visible{color:var(--blue)}
+
+/* ── Tooltip ──────────────────────────────────────────────────────────────── */
+.stream-tooltip{position:absolute;bottom:calc(100% + 8px);right:0;width:220px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.5;color:var(--muted);z-index:30;box-shadow:0 4px 16px rgba(0,0,0,.18);pointer-events:none}
+
+/* ── Toggle switch ────────────────────────────────────────────────────────── */
+.stream-switch{position:relative;width:34px;height:20px;padding:0;border:2px solid var(--line);border-radius:12px;background:transparent;cursor:pointer;transition:border-color .25s,background .25s;flex-shrink:0}
+.stream-switch::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--muted);transition:transform .25s,background .25s}
+.stream-switch.on{border-color:var(--blue);background:var(--blue)}
+.stream-switch.on::after{transform:translateX(14px);background:#fff}
+html[data-theme='light'] .stream-switch.on{border-color:#174ea6;background:#174ea6}
+
+/* -- Backend-disabled notice (VITE_ENABLE_CHAT=false) ----------------------- */
+.chat-notice{display:flex;align-items:flex-start;gap:8px;margin:8px 0;padding:8px 10px;border-radius:10px;font-size:14px;line-height:1.5;color:var(--text);background:color-mix(in srgb,var(--blue) 12%,transparent);border:1px solid color-mix(in srgb,var(--blue) 40%,transparent)}
+.chat-notice svg{margin-top:3px;color:var(--cyan)}
