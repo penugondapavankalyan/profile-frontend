@@ -31,7 +31,7 @@ export async function sendChatMessage(message, { signal, conversationId, stream 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       // Backend expects an API Gateway-style event with a string body.
-      body: JSON.stringify({ body: payload }),
+      body: env.lambdaInvoke ? JSON.stringify({ body: payload }) : payload,
       signal: requestSignal,
     });
 
