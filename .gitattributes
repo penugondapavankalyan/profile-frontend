@@ -1,0 +1,20 @@
+# Automatically normalize text files to LF on commit
+* text=auto
+
+# Ensure source files always use LF line endings
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+*.svg text eol=lf
+
+# Keep binary files untouched
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary

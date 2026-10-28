@@ -44,6 +44,7 @@ export async function sendChatMessage(message, { signal, conversationId, stream 
       let answer = '';
       let buffer = '';
       let finished = false;
+      let returnedConversationId;
 
       while (!finished) {
         const { done, value } = await reader.read();
@@ -63,7 +64,11 @@ export async function sendChatMessage(message, { signal, conversationId, stream 
             // JSON-wrapped token: {"token": "..."}
             try {
               const parsed = JSON.parse(chunk);
-              if (typeof parsed.token === 'string') answer += parsed.token;
+              if (typeof parsed.token === 'string') {
+                answer += parsed.token;
+              } else if (typeof parsed.conversation_id === 'string') {
+                returnedConversationId = parsed.conversation_id;
+              }
             } catch {
               answer += chunk;
             }
@@ -77,7 +82,7 @@ export async function sendChatMessage(message, { signal, conversationId, stream 
 
       if (finished) await reader.cancel().catch(() => {});
       // conversation_id is not part of the stream; keep the one the caller holds.
-      return { answer, conversationId };
+      return { answer, conversationId: returnedConversationId ?? conversationId };
     }
 
     // ── Standard JSON path ───────────────────────────────────────────────────

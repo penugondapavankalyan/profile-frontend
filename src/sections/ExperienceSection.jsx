@@ -16,10 +16,10 @@ function useYearHeight() {
   return yearHeight;
 }
 
-function getCardPositions(items, firstYear, yearHeight) {
+function getCardPositions(items, lastYear, yearHeight) {
   let previousEnd = 0;
   return items.map(experience => {
-    const startOffset = (experience.startYear - firstYear) * yearHeight;
+    const startOffset = (lastYear - experience.endYear) * yearHeight;
     const marginTop = startOffset - previousEnd;
     const height = (experience.endYear - experience.startYear + 1) * yearHeight;
     previousEnd = Math.max(previousEnd, startOffset + height);
@@ -37,8 +37,8 @@ function ExperienceCard({ experience }) {
   </article>;
 }
 
-function ExperienceColumn({ items, firstYear, className, label, yearHeight }) {
-  const positions = getCardPositions(items, firstYear, yearHeight);
+function ExperienceColumn({ items, lastYear, className, label, yearHeight }) {
+  const positions = getCardPositions(items, lastYear, yearHeight);
   return <div className={`experience-cards ${className}`} aria-label={label}>{items.map((experience, index) => <div className="experience-card-slot" key={`${experience.role}-${index}`} style={{ marginTop: `${positions[index].marginTop}px`, minHeight: `${positions[index].height}px` }}><ExperienceCard experience={experience} /></div>)}</div>;
 }
 
@@ -65,18 +65,18 @@ export function ExperienceSection() {
 
   const firstYear = Math.min(...experiences.map(e => e.startYear));
   const lastYear  = Math.max(...experiences.map(e => e.endYear));
-  const years = Array.from({ length: lastYear - firstYear + 1 }, (_, i) => firstYear + i);
-  const education = experiences.filter(experience => experience.isEducation);
-  const professional = experiences.filter(experience => !experience.isEducation);
+  const years = Array.from({ length: lastYear - firstYear + 1 }, (_, i) => lastYear - i);
+  const education    = experiences.filter(e =>  e.isEducation).sort((a, b) => b.endYear - a.endYear);
+  const professional = experiences.filter(e => !e.isEducation).sort((a, b) => b.endYear - a.endYear);
 
   return <section id="experience" className="section morph-section">
     <div className="container">
-      <SectionHeading index="05 / Experience" title="Work that compounds over time." intro="Scroll chronologically. Education appears on the left and professional experience on the right." />
+      <SectionHeading index="05 / Experience" title="Work that compounds over time." intro="Most recent first. Education appears on the left and professional experience on the right." />
       <div className="experience-timeline" aria-label="Career experience timeline">
         <div className="experience-rail" aria-hidden="true" />
-        <ExperienceColumn items={education} firstYear={firstYear} className="experience-education" label="Education" yearHeight={yearHeight} />
+        <ExperienceColumn items={education}    lastYear={lastYear} className="experience-education"    label="Education"               yearHeight={yearHeight} />
         <div className="experience-years" aria-label="Career years">{years.map(year => <div className="experience-year" key={year}><span className="year-pill">{year}</span></div>)}</div>
-        <ExperienceColumn items={professional} firstYear={firstYear} className="experience-professional" label="Professional experience" yearHeight={yearHeight} />
+        <ExperienceColumn items={professional} lastYear={lastYear} className="experience-professional" label="Professional experience" yearHeight={yearHeight} />
       </div>
       <div className="skills">
         <p className="eyebrow">Skills and technologies</p>
