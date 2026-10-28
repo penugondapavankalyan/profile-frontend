@@ -1,4 +1,4 @@
-@keyframes float{50%{transform:translateY(-15px) rotate(4deg)}}@keyframes dot-wave{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-7px);opacity:1}}
+@keyframes float{50%{transform:translateY(-60px) rotate(0deg)}}@keyframes dot-wave{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-8px);opacity:1}}
 
 /* ─── Ferris-wheel scroll transition ─────────────────────────────────────────
    Every .morph-section gets two live vars from the scroll listener:
